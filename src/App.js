@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import {
   Menu,
   X,
@@ -17,201 +17,308 @@ import {
   GraduationCap,
   Sparkles,
   Rocket,
-  Zap,
+  Server,
+  Terminal,
+  Layers,
+  BookOpen,
+  ShieldCheck,
 } from "lucide-react";
+
+const RESUME_PATH = "/resume.pdf";
+const EMAIL = "mhmmedahraz@gmail.com";
+const PHONE = "+91 86066 84779";
+const PHONE_HREF = "tel:+918606684779";
+const LOCATION = "Kasaragod, Kerala";
+const GITHUB_URL = "https://github.com/mhmmedahraz18";
+const LINKEDIN_URL = "https://www.linkedin.com/in/mohammed-ahraz/";
 
 const Portfolio = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [scrolled, setScrolled] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleContactChange = (field) => (e) => {
+    setContactForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(
+      `Portfolio inquiry from ${contactForm.name || "website visitor"}`
+    );
+    const body = encodeURIComponent(
+      `${contactForm.message}\n\n— ${contactForm.name} (${contactForm.email})`
+    );
+    window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
+  };
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    let scrollTicking = false;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 50);
 
-      const sections = [
-        "home",
-        "about",
-        "skills",
-        "projects",
-        "experience",
-        "education",
-        "certifications",
-        "contact",
-      ];
-      const current = sections.find((section) => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
-        }
-        return false;
+        const sections = [
+          "home",
+          "about",
+          "skills",
+          "projects",
+          "experience",
+          "education",
+          "certifications",
+          "contact",
+        ];
+        const current = sections.find((section) => {
+          const element = document.getElementById(section);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            return rect.top <= 100 && rect.bottom >= 100;
+          }
+          return false;
+        });
+        if (current) setActiveSection(current);
+        scrollTicking = false;
       });
-      if (current) setActiveSection(current);
     };
 
+    let moveTicking = false;
+    let lastMouseEvent = null;
     const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      lastMouseEvent = e;
+      if (moveTicking || prefersReducedMotion) return;
+      moveTicking = true;
+      requestAnimationFrame(() => {
+        if (lastMouseEvent) {
+          setMousePosition({
+            x: lastMouseEvent.clientX,
+            y: lastMouseEvent.clientY,
+          });
+        }
+        moveTicking = false;
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    if (!prefersReducedMotion) {
+      window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    }
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
-  const scrollToSection = (id) => {
+  const scrollToSection = useCallback((id) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
       setIsMenuOpen(false);
     }
-  };
+  }, []);
 
   const skills = {
-    frontend: [
-      "HTML5",
-      "CSS3",
-      "JavaScript",
+    languages: ["Python", "JavaScript (ES6+)", "SQL", "HTML5", "CSS3"],
+    frameworks: [
       "React.js",
-      "Bootstrap",
+      "Flask",
+      "Node.js",
+      "Express.js",
       "Tailwind CSS",
-    ],
-    backend: ["Node.js", "Express.js", "Python", "Django", "Flask"],
-    database: ["MongoDB", "MySQL", "PostgreSQL"],
-    tools: ["Git", "GitHub", "VS Code", "Postman", "AWS", "Azure", "Docker"],
-    ai: [
-      "Machine Learning",
       "OpenCV",
-      "TensorFlow",
-      "Natural Language Processing",
+      "YOLO",
     ],
-    soft: [
-      "Team Collaboration",
-      "Problem Solving",
-      "Time Management",
-      "Communication",
+    database: ["MySQL", "MongoDB"],
+    ai: [
+      "LLM Integration (Gemini API)",
+      "Prompt Engineering",
+      "NLTK",
+      "spaCy",
+      "Computer Vision",
     ],
+    cloud: ["IBM Cloud", "Cloud Application Deployment", "REST APIs"],
+    tools: [
+      "Git",
+      "Postman",
+      "Android Studio",
+      "Word / Excel / PowerPoint / Access",
+    ],
+    concepts: ["SDLC", "MERN Stack", "DBMS", "Embedded Systems", "Agile Teamwork"],
   };
 
   const projects = [
     {
-      title: "RoboMigo - AI Chatbot & Person Detection",
-      tech: ["Python", "OpenCV", "NLP", "Machine Learning"],
+      title: "RoboMigo — Campus Navigation & AI Information Kiosk",
+      tech: ["Python", "Flask", "OpenCV", "YOLOv8", "Gemini API", "NLTK", "JavaScript"],
       description:
-        "AI-powered chatbot with real-time person detection capabilities using computer vision and natural language processing.",
-      github: "#",
+        "Multilingual AI chatbot and voice assistant that acts as an autonomous information kiosk for campus visitors, cutting down manual inquiry handling.",
+      highlights: [
+        "Real-time person detection with OpenCV and YOLOv8, so the kiosk proactively greets visitors within proximity",
+        "Google Gemini API integration for general queries, paired with a custom institutional knowledge base for college-specific answers",
+        "Full-stack build with a Flask back end and a responsive JavaScript/HTML5/CSS3 front end",
+      ],
+      github: GITHUB_URL,
       gradient: "from-purple-600 to-pink-600",
     },
     {
       title: "Sports Club Management System",
-      tech: ["Python", "Django", "PostgreSQL", "Bootstrap"],
+      tech: ["Python", "SQL", "MySQL", "DBMS"],
       description:
-        "Comprehensive web platform for managing sports club operations including member registration, event scheduling, and analytics.",
-      github: "#",
+        "Relational database-driven platform to streamline member registration, health tracking, routine assignment, and payment management for sports clubs.",
+      highlights: [
+        "Normalized SQL schemas with optimized queries, reducing data redundancy and improving retrieval performance",
+        "Admin dashboard that simplified administrative workflows, cutting estimated manual record-keeping effort by 60%",
+      ],
+      github: GITHUB_URL,
       gradient: "from-blue-600 to-cyan-600",
     },
     {
-      title: "Garden Vehicle",
-      tech: ["Embedded Systems", "IoT", "C++", "Arduino"],
+      title: "Instagram Clone — Mobile Social Media Application",
+      tech: ["Java", "Android Studio", "Firebase"],
       description:
-        "Automated garden maintenance vehicle with intelligent navigation and watering systems.",
-      github: "#",
-      gradient: "from-green-600 to-teal-600",
+        "Feature-complete Instagram clone on Android replicating authentication, feed rendering, post creation, likes, comments, and profile management.",
+      highlights: [
+        "Firebase integration for real-time database management and authentication",
+        "Secure, scalable data handling for concurrent users",
+      ],
+      github: GITHUB_URL,
+      gradient: "from-orange-600 to-red-600",
     },
     {
-      title: "Instagram Clone Application",
-      tech: ["MERN Stack", "MongoDB", "Express", "React", "Node.js"],
+      title: "Garden Vehicle — Smart Embedded System",
+      tech: ["C/C++", "Microcontrollers", "Embedded Systems"],
       description:
-        "Full-stack social media application replicating core Instagram features with real-time updates and media sharing.",
-      github: "#",
-      gradient: "from-orange-600 to-red-600",
+        "Multi-function autonomous garden vehicle integrating grass-cutting, water-sprinkling, and robotic navigation capabilities.",
+      highlights: [
+        "Microcontroller logic for sensor integration and actuator control",
+        "Applied embedded systems principles to deliver a practical smart garden solution",
+      ],
+      github: GITHUB_URL,
+      gradient: "from-green-600 to-teal-600",
     },
   ];
 
   const experience = [
     {
-      role: "Python Full Stack Development Trainee",
-      company: "QSpiders",
-      location: "Trivandrum",
-      period: "Oct 2023 - Apr 2024",
+      role: "Python Full Stack Developer Intern",
+      company: "Knovista Technologies",
+      location: "Kochi",
+      period: "Feb 2026 - Present",
       points: [
-        "Completed comprehensive training in Python Full Stack Development",
-        "Built multiple web applications using Django and Flask frameworks",
-        "Gained hands-on experience with frontend and backend integration",
+        "Continuing hands-on Python full stack development on production web applications",
+        "Applying SDLC and SQL database practices from prior training in a live team setting",
       ],
       icon: <Code className="w-6 h-6" />,
     },
     {
-      role: "Full Stack Development Intern",
-      company: "Gigabyte Labs",
-      location: "Trivandrum",
-      period: "Apr 2024 - Jul 2024",
+      role: "Python Full Stack Developer Trainee",
+      company: "Qspiders",
+      location: "Kochi",
+      period: "May 2025 - Dec 2025",
       points: [
-        "Developed and deployed full-stack web applications",
-        "Worked with MERN stack technologies",
-        "Collaborated with team on real-world client projects",
+        "Built practical expertise in full stack web development with HTML5, CSS3, JavaScript, and React.js",
+        "Gained hands-on experience with SDLC processes and SQL database management, designing and querying relational databases",
+        "Strengthened problem-solving, debugging, and cross-team collaboration through structured, project-based training",
+      ],
+      icon: <Terminal className="w-6 h-6" />,
+    },
+    {
+      role: "Full Stack Developer Intern",
+      company: "Gigabyte Labs Pvt. Ltd.",
+      location: "Mangalore",
+      period: "Feb 2025 - May 2025",
+      points: [
+        "Designed and deployed full stack web solutions using the MERN stack, contributing to 3+ active development initiatives",
+        "Collaborated cross-functionally within an Agile team — daily standups, code reviews, and sprint planning",
+        "Implemented RESTful APIs and integrated front-end components with back-end services, improving responsiveness and scalability",
       ],
       icon: <Rocket className="w-6 h-6" />,
     },
     {
-      role: "IBM Cloud Internship",
-      company: "IBM",
-      period: "2024",
+      role: "Cloud Application Developer Intern",
+      company: "Rooman Technologies | IBM",
+      period: "Sep 2024 - Feb 2025",
       points: [
-        "Gained expertise in cloud computing and IBM Cloud services",
-        "Deployed applications on cloud infrastructure",
-        "Learned about scalability and cloud architecture patterns",
+        "Developed and deployed secure, high-performance cloud applications on IBM Cloud using cloud-native architecture and resource optimization",
+        "Implemented cloud deployment pipelines and applied application security best practices, reducing potential vulnerability exposure",
+        "Earned the IBM Cloud Application Developer certification, validating cloud development competency",
       ],
       icon: <Cloud className="w-6 h-6" />,
     },
     {
-      role: "CyberSecurity Internship",
-      company: "Various",
-      period: "2024",
+      role: "CyberSecurity Intern",
+      company: "P.A. College of Engineering",
+      period: "2023 - 2024",
       points: [
-        "Studied cybersecurity principles and best practices",
-        "Learned about network security and threat analysis",
-        "Implemented security measures in web applications",
+        "Analyzed network vulnerabilities and implemented security protocols across institutional systems",
+        "Contributed to comprehensive threat assessment reports",
+        "Conducted penetration testing simulations and documented findings, strengthening the institution's cybersecurity posture",
       ],
-      icon: <Zap className="w-6 h-6" />,
+      icon: <ShieldCheck className="w-6 h-6" />,
     },
   ];
 
   const education = [
     {
-      degree: "Bachelor of Technology in Computer Science & Engineering",
-      institution: "APJ Abdul Kalam Technological University",
-      location: "Kerala",
-      year: "2020 - 2024",
-      grade: "CGPA: 7.8",
+      degree: "B.E. in Computer Science & Engineering",
+      institution: "P.A. College of Engineering, Mangalore | VTU",
+      location: "Mangalore",
+      year: "2021 - 2025",
+      grade: "CGPA: 8.95 / 10",
     },
     {
-      degree: "Higher Secondary Education",
-      institution: "KHIHSS Puthukurichy",
+      degree: "Higher Secondary (HSSC)",
+      institution: "TIHSS | Kerala DHSE",
       location: "Kerala",
-      year: "2018 - 2020",
-      grade: "Percentage: 77%",
+      year: "2019 - 2021",
+      grade: "Kerala DHSE",
+    },
+    {
+      degree: "SSLC",
+      institution: "TIHSS | Kerala Board of Public Examinations",
+      location: "Kerala",
+      year: "2018 - 2019",
+      grade: "Kerala Board",
     },
   ];
 
   const certifications = [
-    "IBM Cloud Essentials",
-    "Salesforce Developer Virtual Internship",
+    "IBM – Data Backup & Recovery with IBM Cloud Object Storage",
+    "Cloud Application Developer (Skill India / NCVET)",
     "Postman API Fundamentals Student Expert",
-    "Skill India Python Programming",
-    "CyberSecurity Fundamentals",
-    "Full Stack Web Development",
-    "Machine Learning Basics",
+    "Life Skills 2.0 – Wadhwani Foundation",
+  ];
+
+  const relevantCourses = [
+    "Joy of Computing using Python (VTU)",
+    "Python for Data Science (IBM / Infosys)",
+    "Natural Language Processing (VTU)",
+    "Data Science Tools (Infosys)",
+    "Competitive Programming (VTU)",
+    "Introduction to Salesforce",
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyan-600 focus:text-white focus:rounded-lg"
+      >
+        Skip to main content
+      </a>
       {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div
           className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
           style={{
@@ -226,6 +333,7 @@ const Portfolio = () => {
 
       {/* Navbar */}
       <nav
+        aria-label="Primary"
         className={`fixed w-full z-50 transition-all duration-500 ${
           scrolled
             ? "bg-slate-950/90 backdrop-blur-xl shadow-2xl shadow-blue-500/10"
@@ -238,7 +346,7 @@ const Portfolio = () => {
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:via-cyan-400 group-hover:to-blue-400 transition-all duration-500">
                 Ahraz
               </span>
-              <Sparkles className="inline ml-2 text-cyan-400 w-5 h-5 animate-pulse" />
+              <Sparkles className="inline ml-2 text-cyan-400 w-5 h-5 animate-pulse" aria-hidden="true" />
             </div>
 
             <div className="hidden md:flex space-x-1 bg-slate-900/50 backdrop-blur-sm rounded-full p-2">
@@ -255,7 +363,10 @@ const Portfolio = () => {
                 <button
                   key={item}
                   onClick={() => scrollToSection(item.toLowerCase())}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                  aria-current={
+                    activeSection === item.toLowerCase() ? "page" : undefined
+                  }
+                  className={`px-4 py-2 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                     activeSection === item.toLowerCase()
                       ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/50"
                       : "text-gray-300 hover:text-white hover:bg-slate-800/50"
@@ -267,16 +378,22 @@ const Portfolio = () => {
             </div>
 
             <button
-              className="md:hidden p-2 rounded-lg bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-colors"
+              className="md:hidden p-2 rounded-lg bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
             >
-              {isMenuOpen ? <X /> : <Menu />}
+              {isMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
             </button>
           </div>
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 animate-slideDown">
+          <div
+            id="mobile-menu"
+            className="md:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 animate-slideDown"
+          >
             <div className="px-4 pt-4 pb-6 space-y-2">
               {[
                 "Home",
@@ -291,7 +408,7 @@ const Portfolio = () => {
                 <button
                   key={item}
                   onClick={() => scrollToSection(item.toLowerCase())}
-                  className="block w-full text-left px-4 py-3 text-gray-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"
+                  className="block w-full text-left px-4 py-3 text-gray-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
                   {item}
                 </button>
@@ -301,6 +418,7 @@ const Portfolio = () => {
         )}
       </nav>
 
+      <main id="main-content">
       {/* Hero Section */}
       <section
         id="home"
@@ -323,15 +441,17 @@ const Portfolio = () => {
             className="text-2xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-500 mb-6 animate-fadeInUp font-bold"
             style={{ animationDelay: "0.2s" }}
           >
-            Full Stack Developer | AI & Cloud Enthusiast
+            Python Full Stack Developer · AI Enthusiast · CS Engineer
           </p>
 
           <p
             className="text-lg md:text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed animate-fadeInUp"
             style={{ animationDelay: "0.4s" }}
           >
-            Computer Science Engineer passionate about building innovative web
-            applications with cutting-edge technologies
+            Building end-to-end solutions across React front ends,
+            Flask/Node.js back ends, and AI integrations — from computer
+            vision with OpenCV & YOLO to LLM-powered assistants with the
+            Gemini API.
           </p>
 
           <div
@@ -339,18 +459,31 @@ const Portfolio = () => {
             style={{ animationDelay: "0.6s" }}
           >
             <button
-              onClick={() => scrollToSection("contact")}
-              className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all duration-300 hover:-translate-y-1"
+              onClick={() => scrollToSection("projects")}
+              className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
             >
               <span className="flex items-center justify-center gap-2">
-                Hire Me
+                View Projects
                 <Rocket className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
-            <button className="group px-8 py-4 bg-slate-900/50 backdrop-blur-sm border-2 border-blue-500/50 text-white rounded-full font-bold text-lg hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1">
+            <a
+              href={RESUME_PATH}
+              download
+              className="group px-8 py-4 bg-slate-900/50 backdrop-blur-sm border-2 border-blue-500/50 text-white rounded-full font-bold text-lg hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
               <span className="flex items-center justify-center gap-2">
                 <Download className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
-                Download CV
+                Download Resume
+              </span>
+            </a>
+            <button
+              onClick={() => scrollToSection("contact")}
+              className="group px-8 py-4 text-white rounded-full font-bold text-lg border-2 border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              <span className="flex items-center justify-center gap-2">
+                Contact Me
+                <Mail className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
               </span>
             </button>
           </div>
@@ -364,7 +497,6 @@ const Portfolio = () => {
       </section>
 
       {/* About Section */}
-      {/* About Section */}
       <section id="about" className="py-32 relative">
         <AnimatedSection>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -376,32 +508,38 @@ const Portfolio = () => {
                   <div className="w-full h-full rounded-2xl overflow-hidden">
                     <img
                       src="/profile.jpg"
-                      alt="Mohammed Ahraz"
+                      alt="Portrait of Mohammed Ahraz"
                       className="w-full h-full object-cover"
+                      width="320"
+                      height="320"
                     />
                   </div>
                 </div>
               </div>
-              {/* Rest of the about content */}
               <div className="space-y-6">
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  A highly motivated Computer Science & Engineering graduate
-                  with a passion for technology and innovation. Proficient in
-                  the MERN stack, Python, and cloud technologies, with hands-on
-                  experience in developing full-stack web applications and
-                  AI-powered solutions.
+                  Results-driven Computer Science & Engineering graduate
+                  (CGPA: 8.95/10) with hands-on experience in Python full
+                  stack development, AI/ML integration, and cloud
+                  application deployment. I build end-to-end solutions
+                  spanning React.js front ends, Flask/Node.js back ends, and
+                  SQL databases.
                 </p>
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  I have completed multiple internships and training programs,
-                  working on real-world projects that demonstrate my ability to
-                  deliver scalable and efficient solutions. My expertise spans
-                  across web development, artificial intelligence, embedded
-                  systems, and cloud computing.
+                  I've integrated LLMs, computer vision (OpenCV, YOLO), and
+                  REST APIs into production-ready applications across four
+                  internships, and I'm looking for a challenging software
+                  development role where I can deliver impactful, scalable
+                  solutions.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4 pt-6">
-                  <ContactItem icon={<Mail />} text="ahrazy2002@gmail.com" />
-                  <ContactItem icon={<Phone />} text="+91 8157997355" />
-                  <ContactItem icon={<MapPin />} text="Trivandrum, Kerala" />
+                  <ContactItem
+                    icon={<Mail />}
+                    text={EMAIL}
+                    href={`mailto:${EMAIL}`}
+                  />
+                  <ContactItem icon={<Phone />} text={PHONE} href={PHONE_HREF} />
+                  <ContactItem icon={<MapPin />} text={LOCATION} />
                 </div>
               </div>
             </div>
@@ -416,15 +554,15 @@ const Portfolio = () => {
             <SectionTitle>Skills & Expertise</SectionTitle>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <SkillCard
-                title="Frontend Development"
-                icon={<Code />}
-                skills={skills.frontend}
+                title="Languages"
+                icon={<Terminal />}
+                skills={skills.languages}
                 delay={0}
               />
               <SkillCard
-                title="Backend Development"
-                icon={<Database />}
-                skills={skills.backend}
+                title="Frameworks & Libraries"
+                icon={<Code />}
+                skills={skills.frameworks}
                 delay={100}
               />
               <SkillCard
@@ -434,22 +572,28 @@ const Portfolio = () => {
                 delay={200}
               />
               <SkillCard
-                title="Tools & Cloud"
-                icon={<Cloud />}
-                skills={skills.tools}
+                title="AI / Machine Learning & NLP"
+                icon={<Cpu />}
+                skills={skills.ai}
                 delay={300}
               />
               <SkillCard
-                title="AI & ML"
-                icon={<Cpu />}
-                skills={skills.ai}
+                title="Cloud & DevOps"
+                icon={<Cloud />}
+                skills={skills.cloud}
                 delay={400}
               />
               <SkillCard
-                title="Soft Skills"
-                icon={<Award />}
-                skills={skills.soft}
+                title="Tools & Platforms"
+                icon={<Server />}
+                skills={skills.tools}
                 delay={500}
+              />
+              <SkillCard
+                title="Core Concepts"
+                icon={<Layers />}
+                skills={skills.concepts}
+                delay={600}
               />
             </div>
           </div>
@@ -508,6 +652,21 @@ const Portfolio = () => {
                 <CertCard key={index} cert={cert} delay={index * 50} />
               ))}
             </div>
+
+            <h3 className="text-2xl font-bold text-white mt-20 mb-8 text-center">
+              Relevant Courses
+            </h3>
+            <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+              {relevantCourses.map((course, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-slate-900/50 backdrop-blur-sm text-gray-300 rounded-full text-sm font-medium border border-slate-800 hover:border-cyan-500/50 hover:text-white transition-all"
+                >
+                  <BookOpen className="w-4 h-4 text-cyan-400" />
+                  {course}
+                </span>
+              ))}
+            </div>
           </div>
         </AnimatedSection>
       </section>
@@ -520,39 +679,64 @@ const Portfolio = () => {
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
               <div className="relative bg-slate-900/50 backdrop-blur-xl p-8 md:p-12 rounded-3xl border border-slate-800 shadow-2xl">
-                <div className="space-y-6">
-                  <InputField label="Name" placeholder="Your Name" />
+                <form className="space-y-6" onSubmit={handleContactSubmit}>
                   <InputField
+                    id="contact-name"
+                    label="Name"
+                    placeholder="Your Name"
+                    value={contactForm.name}
+                    onChange={handleContactChange("name")}
+                    required
+                  />
+                  <InputField
+                    id="contact-email"
                     label="Email"
                     type="email"
                     placeholder="your.email@example.com"
+                    value={contactForm.email}
+                    onChange={handleContactChange("email")}
+                    required
                   />
                   <div>
-                    <label className="block text-gray-300 font-semibold mb-3 text-lg">
+                    <label
+                      htmlFor="contact-message"
+                      className="block text-gray-300 font-semibold mb-3 text-lg"
+                    >
                       Message
                     </label>
                     <textarea
+                      id="contact-message"
+                      name="message"
                       rows="5"
+                      required
+                      value={contactForm.message}
+                      onChange={handleContactChange("message")}
                       className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-white placeholder-gray-500"
                       placeholder="Your message..."
                     ></textarea>
                   </div>
-                  <button className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all duration-300">
+                  <button
+                    type="submit"
+                    className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                  >
                     Send Message
                   </button>
-                </div>
+                </form>
                 <div className="flex justify-center gap-8 mt-12">
                   <SocialIcon
-                    href="https://github.com"
-                    icon={<Github size={28} />}
+                    href={GITHUB_URL}
+                    icon={<Github size={28} aria-hidden="true" />}
+                    label="Mohammed Ahraz on GitHub"
                   />
                   <SocialIcon
-                    href="https://linkedin.com"
-                    icon={<Linkedin size={28} />}
+                    href={LINKEDIN_URL}
+                    icon={<Linkedin size={28} aria-hidden="true" />}
+                    label="Mohammed Ahraz on LinkedIn"
                   />
                   <SocialIcon
-                    href="mailto:ahrazy2002@gmail.com"
-                    icon={<Mail size={28} />}
+                    href={`mailto:${EMAIL}`}
+                    icon={<Mail size={28} aria-hidden="true" />}
+                    label="Email Mohammed Ahraz"
                   />
                 </div>
               </div>
@@ -561,11 +745,13 @@ const Portfolio = () => {
         </AnimatedSection>
       </section>
 
+      </main>
+
       {/* Footer */}
       <footer className="bg-slate-950 border-t border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400 text-lg">
-            © 2025 Mohammed Ahraz. All rights reserved.
+            © {new Date().getFullYear()} Mohammed Ahraz. All rights reserved.
           </p>
           <p className="text-gray-600 mt-2">
             Built with React & Tailwind CSS ✨
@@ -574,6 +760,14 @@ const Portfolio = () => {
       </footer>
 
       <style>{`
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
@@ -616,26 +810,26 @@ const AnimatedSection = ({ children }) => {
   const ref = useRef(null);
 
   useEffect(() => {
-  const node = ref.current;
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting) {
-        setIsVisible(true);
-      }
-    },
-    { threshold: 0.1 }
-  );
+    const node = ref.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  if (node) {
-    observer.observe(node);
-  }
-
-  return () => {
     if (node) {
-      observer.unobserve(node);
+      observer.observe(node);
     }
-  };
-}, []);
+
+    return () => {
+      if (node) {
+        observer.unobserve(node);
+      }
+    };
+  }, []);
 
   return (
     <div
@@ -658,16 +852,28 @@ const SectionTitle = ({ children }) => (
   </div>
 );
 
-const ContactItem = ({ icon, text }) => (
-  <div className="flex items-center gap-3 p-4 bg-slate-900/30 backdrop-blur-sm rounded-xl border border-slate-800 hover:border-cyan-500/50 transition-all group">
-    <div className="text-cyan-400 group-hover:scale-110 transition-transform">
-      {icon}
-    </div>
-    <span className="text-gray-300 group-hover:text-white transition-colors">
-      {text}
-    </span>
-  </div>
-);
+const ContactItem = ({ icon, text, href }) => {
+  const classes =
+    "flex items-center gap-3 p-4 bg-slate-900/30 backdrop-blur-sm rounded-xl border border-slate-800 hover:border-cyan-500/50 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400";
+  const inner = (
+    <>
+      <div className="text-cyan-400 group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <span className="text-gray-300 group-hover:text-white transition-colors">
+        {text}
+      </span>
+    </>
+  );
+
+  return href ? (
+    <a href={href} className={classes}>
+      {inner}
+    </a>
+  ) : (
+    <div className={classes}>{inner}</div>
+  );
+};
 
 const SkillCard = ({ title, icon, skills, delay }) => (
   <div
@@ -696,43 +902,70 @@ const SkillCard = ({ title, icon, skills, delay }) => (
   </div>
 );
 
-const ProjectCard = ({ title, tech, description, github, gradient, delay }) => (
-  <div
-    className="group relative bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-cyan-500/20"
-    style={{ animationDelay: `${delay}ms` }}
-  >
+const ProjectCard = memo(function ProjectCard({
+  title,
+  tech,
+  description,
+  highlights,
+  github,
+  gradient,
+  delay,
+}) {
+  return (
     <div
-      className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-500`}
-    ></div>
-    <div className="relative">
-      <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-cyan-400 transition-colors">
-        {title}
-      </h3>
-      <p className="text-gray-400 mb-6 leading-relaxed">{description}</p>
-      <div className="flex flex-wrap gap-2 mb-6">
-        {tech.map((t, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 bg-slate-800/50 text-cyan-400 rounded-lg text-sm border border-slate-700"
-          >
-            {t}
-          </span>
-        ))}
+      className="group relative bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-cyan-500/20"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-500`}
+      ></div>
+      <div className="relative">
+        <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-cyan-400 transition-colors">
+          {title}
+        </h3>
+        <p className="text-gray-400 mb-4 leading-relaxed">{description}</p>
+        {highlights && highlights.length > 0 && (
+          <ul className="space-y-2 mb-6">
+            {highlights.map((point, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-2 text-gray-400 text-sm leading-relaxed"
+              >
+                <span className="text-cyan-400 mt-1 flex-shrink-0">▸</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {tech.map((t, index) => (
+            <span
+              key={index}
+              className="px-3 py-1 bg-slate-800/50 text-cyan-400 rounded-lg text-sm border border-slate-700"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+        <a
+          href={github}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded"
+          aria-label={`View ${title} on GitHub`}
+        >
+          <Github size={20} aria-hidden="true" />
+          View Code
+          <ExternalLink
+            size={16}
+            aria-hidden="true"
+            className="group-hover/link:translate-x-1 transition-transform"
+          />
+        </a>
       </div>
-      <a
-        href={github}
-        className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold group/link"
-      >
-        <Github size={20} />
-        View Code
-        <ExternalLink
-          size={16}
-          className="group-hover/link:translate-x-1 transition-transform"
-        />
-      </a>
     </div>
-  </div>
-);
+  );
+});
 
 const ExperienceCard = ({
   role,
@@ -834,25 +1067,34 @@ const CertCard = ({ cert, delay }) => (
   </div>
 );
 
-const InputField = ({ label, type = "text", placeholder }) => (
+const InputField = ({ id, label, type = "text", placeholder, value, onChange, required }) => (
   <div>
-    <label className="block text-gray-300 font-semibold mb-3 text-lg">
+    <label
+      htmlFor={id}
+      className="block text-gray-300 font-semibold mb-3 text-lg"
+    >
       {label}
     </label>
     <input
+      id={id}
+      name={id}
       type={type}
+      value={value}
+      onChange={onChange}
+      required={required}
       className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-white placeholder-gray-500"
       placeholder={placeholder}
     />
   </div>
 );
 
-const SocialIcon = ({ href, icon }) => (
+const SocialIcon = ({ href, icon, label }) => (
   <a
     href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-4 bg-slate-800/50 rounded-xl text-gray-400 hover:text-cyan-400 hover:bg-slate-700/50 border border-slate-700 hover:border-cyan-500/50 transition-all transform hover:scale-110 hover:-translate-y-1"
+    target={href.startsWith("mailto:") ? undefined : "_blank"}
+    rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+    aria-label={label}
+    className="p-4 bg-slate-800/50 rounded-xl text-gray-400 hover:text-cyan-400 hover:bg-slate-700/50 border border-slate-700 hover:border-cyan-500/50 transition-all transform hover:scale-110 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
   >
     {icon}
   </a>
