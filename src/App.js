@@ -14,7 +14,6 @@ import {
   Cloud,
   Cpu,
   Award,
-  Briefcase,
   GraduationCap,
   Sparkles,
   Rocket,
@@ -617,25 +616,26 @@ const AnimatedSection = ({ children }) => {
   const ref = useRef(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+  const node = ref.current;
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
       }
-    };
-  }, []);
+    },
+    { threshold: 0.1 }
+  );
+
+  if (node) {
+    observer.observe(node);
+  }
+
+  return () => {
+    if (node) {
+      observer.unobserve(node);
+    }
+  };
+}, []);
 
   return (
     <div
